@@ -1,0 +1,11 @@
+.colored-pair-row {
+    background-color: grey;
+}
+
+.colored-row {
+    background-color: rgba(0, 0, 0, 0.427);
+}
+
+.pointer {
+    cursor: pointer;
+}

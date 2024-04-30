@@ -1,31 +1,20 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useMemo, useState } from 'react';
 import './App.css';
 import { type User } from './types';
 import { SortBy } from './types.d';
 import UserList from './components/UserList';
+import { useUsers } from './hooks/useUsers';
+import Results from './components/Results';
 
 function App() {
-  const [users, setUsers] = useState<User[]>([]);
+  const { isLoading, isError, users, refetch, fetchNextPage, hasNextPage } =
+    useUsers();
+
   const [showColors, setShowColors] = useState(false);
   const [sorting, setSorting] = useState<SortBy>(SortBy.NONE);
   const [filterCountry, setFilterCountry] = useState<string | null>(null);
 
-  const originalUsers = useRef<User[]>([]);
-  // UseRef -> para guardar un valor
-  // que queremos que se comparta entre renderizados
-  // pero que al cambiar, no vuelva a renderizar el componente
-
-  useEffect(() => {
-    fetch('https://randomuser.me/api?results=100')
-      .then((res) => res.json())
-      .then((res) => {
-        setUsers(res.results);
-        originalUsers.current = res.results;
-      })
-      .catch((err) => {
-        console.error(err);
-      });
-  }, []);
+  // const originalUsers = useRef<User[]>([]);
 
   const handleChangeColor = () => {
     setShowColors(!showColors);
@@ -38,12 +27,13 @@ function App() {
   };
 
   const handleDeleteUser = (email: string) => {
-    const newUsers = users.filter((user) => user.email != email);
-    setUsers(newUsers);
+    // const newUsers = users.filter((user) => user.email != email);
+    // setUsers(newUsers);
   };
 
   const handleResetState = () => {
-    setUsers(originalUsers.current);
+    // setUsers(originalUsers.current);
+    refetch();
   };
 
   const handleChangeSort = (sort: SortBy) => {
@@ -63,21 +53,6 @@ function App() {
   const sortedUsers = useMemo(() => {
     if (sorting === SortBy.NONE) return filteredUsers;
 
-    // if (sorting === SortBy.COUNTRY)
-    //   return [...filteredUsers].sort((a, b) => {
-    //     return a.location.country.localeCompare(b.location.country);
-    //   });
-
-    // if (sorting === SortBy.NAME)
-    //   return [...filteredUsers].sort((a, b) => {
-    //     return a.name.first.localeCompare(b.name.first);
-    //   });
-
-    // if (sorting === SortBy.LAST)
-    //   return [...filteredUsers].sort((a, b) => {
-    //     return a.name.last.localeCompare(b.name.last);
-    //   });
-
     const compareProperties: Record<string, (user: User) => any> = {
       [SortBy.COUNTRY]: (user) => user.location.country,
       [SortBy.NAME]: (user) => user.name.first,
@@ -94,6 +69,7 @@ function App() {
   return (
     <div className='app'>
       <h1>Prueba tecnica</h1>
+      <Results />
       <header style={{ display: 'flex', justifyContent: 'center', gap: 10 }}>
         <button onClick={handleChangeColor}>Coloreal files</button>
 
@@ -114,12 +90,21 @@ function App() {
         />
       </header>
       <main>
-        <UserList
-          users={sortedUsers}
-          showColors={showColors}
-          handleDeleteUser={handleDeleteUser}
-          changeSorting={handleChangeSort}
-        />
+        {users.length > 0 && (
+          <UserList
+            users={sortedUsers}
+            showColors={showColors}
+            handleDeleteUser={handleDeleteUser}
+            changeSorting={handleChangeSort}
+          />
+        )}
+
+        {isLoading && <p>Cargando ...</p>}
+        {!isLoading && isError && <p>Ha habido un error</p>}
+        {!isLoading && !isError && users.length <= 0 && <p>No hay usuarios</p>}
+        {!isLoading && !isError && hasNextPage && (
+          <button onClick={() => fetchNextPage()}>Cargar mas resultados</button>
+        )}
       </main>
     </div>
   );

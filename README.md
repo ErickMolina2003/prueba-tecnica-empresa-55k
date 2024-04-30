@@ -46,3 +46,4 @@ Los pasos a seguir:
  Implement a feature that allows the user to filter the data by country.
  Avoid sorting users again the data when the user is changing filter by country.
  Sort by clicking on the column header.# prueba-tecnica-empresa-55k
+# react-query-tanstack
